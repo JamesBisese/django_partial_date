@@ -8,25 +8,28 @@ from django.core import exceptions
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-
+# I have to figure out the regex for this.  It's already kind of scary. Use 'T' to start any timepart
+# additional parts are , YYYY-MM-DDTHH, YYYY-MM-DDTHH:mm
 partial_date_re = re.compile(
     r"^(?P<year>\d{4})(?:-(?P<month>\d{1,2}))?(?:-(?P<day>\d{1,2}))?$"
 )
 
 
-class PartialDate(object):
+class PartialDateTime(object):
     YEAR = 0
     MONTH = 1
     DAY = 2
+    HOUR = 3
+    MINUTE = 4
 
     _date = None
     _precision = None
 
-    DATE_FORMATS = {YEAR: "%Y", MONTH: "%Y-%m", DAY: "%Y-%m-%d"}
+    DATE_FORMATS = {YEAR: "%Y", MONTH: "%Y-%m", DAY: "%Y-%m-%d", HOUR: "%Y-%m-%d %H:00", MINUTE: "%Y-%m-%d %H:%M"}
 
     def __init__(self, date, precision=DAY):
         if isinstance(date, six.text_type):
-            date, precision = PartialDate.parseDate(date)
+            date, precision = PartialDateTme.parseDate(date)
 
         self.date = date
         self.precision = precision
@@ -38,13 +41,17 @@ class PartialDate(object):
             else self._date.strftime(self.DATE_FORMATS[self._precision])
         )
 
-    def format(self, precision_year=None, precision_month=None, precision_day=None):
+    def format(self, precision_year=None, precision_month=None, precision_day=None, precision_hour=None, precision_minute=None):
         if self.precisionYear():
             format = precision_year
         elif self.precisionMonth():
             format = precision_month
-        else:
+        elif self.precisionDay():
             format = precision_day
+        elif self.precisionHour():
+            format = precision_hour            
+        else:
+            format = precision_minute
         return "" if not self._date else self._date.strftime(format)
 
     @property
@@ -65,6 +72,7 @@ class PartialDate(object):
 
     @precision.setter
     def precision(self, value):
+        # TODO figure this out
         self._precision = (
             value if value in (self.YEAR, self.MONTH, self.DAY) else self.DAY
         )
@@ -81,12 +89,19 @@ class PartialDate(object):
 
     def precisionDay(self):
         return self.precision == self.DAY
+    
+    def precisionHour(self):
+        return self.precision == self.HOUR
+    
+    def precisionMinute(self):
+        return self.precision == self.MINUTE    
 
     @staticmethod
-    def parseDate(value):
+    def parseDateTime(value):
         """
-        Returns a tuple (datetime.date, precision) from a string formatted as YYYY, YYYY-MM, YYYY-MM-DD.
+        Returns a tuple (datetime.date, precision) from a string formatted as YYYY, YYYY-MM, YYYY-MM-DD, YYYY-MM-DDTHH, YYYY-MM-DDTHH:mm.
         """
+        # TOOD this class
         match = partial_date_re.match(value)
 
         try:
@@ -103,7 +118,7 @@ class PartialDate(object):
             return (datetime.date(**kw), precision)
         except (AttributeError, ValueError):
             raise exceptions.ValidationError(
-                _("'%(value)s' is not a valid date string (YYYY, YYYY-MM, YYYY-MM-DD)"),
+                _("'%(value)s' is not a valid date string (YYYY, YYYY-MM, YYYY-MM-DD, YYYY-MM-DDTHH, YYYY-MM-DDTHH:mm)"),
                 params={"value": value},
             )
 
@@ -126,11 +141,11 @@ class PartialDate(object):
             return NotImplemented
 
 
-class PartialDateField(models.Field):
+class PartialDateTimeField(models.Field):
     """
-    A django model field for storing partial dates.
+    A django model field for storing partial datetimes.
     Accepts None, a partial_date.PartialDate object,
-    or a formatted string such as YYYY, YYYY-MM, YYYY-MM-DD.
+    or a formatted string such as YYYY, YYYY-MM, YYYY-MM-DD, YYYY-MM-DDTHH, YYYY-MM-DDTHH:mm.
     In the database it saves the date in a column of type DateTimeField
     and uses the seconds to save the level of precision.
     """
@@ -141,32 +156,33 @@ class PartialDateField(models.Field):
     def from_db_value(self, value, expression, connection, context=None):
         if value is None:
             return value
-        return PartialDate(value.date(), value.second)
+        return PartialDateTime(value.date(), value.second)
 
     def to_python(self, value):
         if value is None:
             return value
 
-        if isinstance(value, PartialDate):
+        if isinstance(value, PartialDateTime):
             return value
 
         if isinstance(value, six.text_type):
-            return PartialDate(value)
+            return PartialDateTime(value)
 
         raise exceptions.ValidationError(
             _(
-                "'%(name)s' value must be a PartialDate instance, "
-                "a valid partial date string (YYYY, YYYY-MM, YYYY-MM-DD) "
+                "'%(name)s' value must be a PartialDateTime instance, "
+                "a valid partial datetime string (YYYY, YYYY-MM, YYYY-MM-DD, YYYY-MM-DD HH(:00???), YYYY-MM-DD HH:mm) "
                 "or None, not '%(value)s'"
             ),
             params={"name": self.name, "value": value},
         )
 
+    # TODO figure out this part
     def get_prep_value(self, value):
         if value in (None, ""):
             return None
-        partial_date = self.to_python(value)
-        date = partial_date.date
+        partial_datetime = self.to_python(value)
+        date = partial_datetime.date
         return datetime.datetime(
             date.year, date.month, date.day, second=partial_date.precision
         )

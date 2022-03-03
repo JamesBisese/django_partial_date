@@ -5,6 +5,8 @@ This is forked from django_partial_date and I am adding Hours and Minutes.  I am
 store instantaneous observations (recorded to the minute) and annual and monthly and daily statistics for those observations in a single table.
 I'm guessing that querying is going to be key - because queries will all need to use the precision flag.
 
+Even though I don't want to use it, I wonder if I should include seconds and store the precision in milliseconds location just to allow for the additional step???
+
 Django custom model field for partial datetimes with the form YYYY, YYYY-MM, YYYY-MM-DD, YYYY-MM-DD HH, YYYY-MM-DD HH:mm
 
  * Works with DRF

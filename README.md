@@ -1,11 +1,15 @@
-django_partial_date
+django_partial_datetime
 ================
 
-Django custom model field for partial dates with the form YYYY, YYYY-MM, YYYY-MM-DD
+This is forked from django_partial_date and I am adding Hours and Minutes.  I am curious if this will allow me to
+store instantaneous observations (recorded to the minute) and annual and monthly and daily statistics for those observations in a single table.
+I'm guessing that querying is going to be key - because queries will all need to use the precision flag.
+
+Django custom model field for partial datetimes with the form YYYY, YYYY-MM, YYYY-MM-DD, YYYY-MM-DD HH, YYYY-MM-DD HH:mm
 
  * Works with DRF
  * Supports comparison operations
- * Supports Django 2.0 and Django 3.0
+ * Supports Django 2.0 and Django 3.0 and Django 4.0
 
 Usage
 ================
@@ -13,47 +17,47 @@ Usage
 install the package
 
 ```bash
-pip install django_partial_date
+pip install django_partial_datetime
 ```
 
 
-## partial_date.PartialDateField
+## partial_datetime.PartialDateTimeField
 
-A django model field for storing partial dates. Accepts None, a partial_date.PartialDate object, or a formatted string such as YYYY, YYYY-MM, YYYY-MM-DD. In the database it saves the date in a column of type DateTimeField and uses the seconds to save the level of precision.
+A django model field for storing partial dates. Accepts None, a partial_date.PartialDateTime object, or a formatted string such as YYYY, YYYY-MM, YYYY-MM-DD, , YYYY-MM-DD HH, , YYYY-MM-DD HH:mm. In the database it saves the date in a column of type DateTimeField and uses the seconds to save the level of precision.
 
-## class partial_date.PartialDate
+## class partial_date.PartialDateTime
 
-Object to represent the partial dates.
+Object to represent the partial date times.
 
 ## Example
 
 models.py
 ```python
 from django.db import models
-from partial_date import PartialDateField
+from partial_date import PartialDateTimeField
 
 class TestModel(models.Model):
-    some_partial_date = PartialDateField()
+    some_partial_datetime = PartialDateTimeField()
 ```
 
 ```python
->>> from partial_date import PartialDate
+>>> from partial_datetime import PartialDateTime
 >>> from core.models import TestModel
->>> obj = TestModel(some_partial_date="1995")
+>>> obj = TestModel(some_partial_datetime="1995")
 >>> obj.save()
->>> obj.some_partial_date
+>>> obj.some_partial_datetime
 '1995'
->>> obj.some_partial_date = PartialDate("1995-09")
+>>> obj.some_partial_date = PartialDateTime("1995-09")
 >>> obj.save()
->>> obj.some_partial_date
+>>> obj.some_partial_datetime
 1995-09
 >>>
 ```
 
 ```python
->>> from partial_date import PartialDate
+>>> from partial_date import PartialDateTime
 >>> import datetime
->>> partial_date_instance = PartialDate(datetime.date(2012, 9, 21), precision=PartialDate.DAY)
+>>> partial_date_instance = PartialDateTime(datetime.date(2012, 9, 21), precision=PartialDate.DAY)
 >>> partial_date_instance
 2012-09-21
 >>> partial_date_instance.precisionYear()

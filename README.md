@@ -7,7 +7,7 @@ I'm guessing that querying is going to be key - because queries will all need to
 
 Even though I don't want to use it, I wonder if I should include seconds and store the precision in milliseconds location just to allow for the additional step???
 
-Django custom model field for partial datetimes with the form YYYY, YYYY-MM, YYYY-MM-DD, YYYY-MM-DD HH, YYYY-MM-DD HH:mm
+Django custom model field for partial datetimes with the form YYYY, YYYY-MM, YYYY-MM-DD, YYYY-MM-DDTHH, YYYY-MM-DDTHH:mm
 
  * Works with DRF
  * Supports comparison operations
@@ -25,7 +25,7 @@ pip install django_partial_datetime
 
 ## partial_datetime.PartialDateTimeField
 
-A django model field for storing partial dates. Accepts None, a partial_date.PartialDateTime object, or a formatted string such as YYYY, YYYY-MM, YYYY-MM-DD, , YYYY-MM-DD HH, , YYYY-MM-DD HH:mm. In the database it saves the date in a column of type DateTimeField and uses the seconds to save the level of precision.
+A django model field for storing partial dates. Accepts None, a partial_date.PartialDateTime object, or a formatted string such as YYYY, YYYY-MM, YYYY-MM-DD, , YYYY-MM-DDTHH, , YYYY-MM-DDTHH:mm. In the database it saves the date in a column of type DateTimeField and uses the seconds to save the level of precision.
 
 ## class partial_date.PartialDateTime
 
